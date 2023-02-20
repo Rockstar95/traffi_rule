@@ -4,6 +4,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:positioned_tap_detector_2/positioned_tap_detector_2.dart';
+import 'package:traffi_rule/utils/my_print.dart';
 
 import '../../models/my_marker_model.dart';
 
@@ -33,43 +34,9 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
   bool isCarMoving = false, isGamePaused = false;
   int currentPopupIndex = -1;
 
-  void _animatedMapMove(LatLng destLocation, double destZoom) {
-    // Create some tweens. These serve to split up the transition from one location to another.
-    // In our case, we want to split the transition be<tween> our current map center and the destination.
-    final latTween = Tween<double>(
-        begin: mapController.center.latitude, end: destLocation.latitude);
-    final lngTween = Tween<double>(
-        begin: mapController.center.longitude, end: destLocation.longitude);
-    final zoomTween = Tween<double>(begin: mapController.zoom, end: destZoom);
-
-    // Create a animation controller that has a duration and a TickerProvider.
-    final controller = AnimationController(
-        duration: const Duration(milliseconds: 500), vsync: this);
-    // The animation determines what path the animation will take. You can try different Curves values, although I found
-    // fastOutSlowIn to be my favorite.
-    final Animation<double> animation =
-        CurvedAnimation(parent: controller, curve: Curves.fastOutSlowIn);
-
-    controller.addListener(() {
-      mapController.move(
-          LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
-          zoomTween.evaluate(animation));
-    });
-
-    animation.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        controller.dispose();
-      } else if (status == AnimationStatus.dismissed) {
-        controller.dispose();
-      }
-    });
-
-    controller.forward();
-  }
-
   Future<void> startMovingCar() async {
     if(isCarMoving) {
-      print("Car is Already Moving");
+      MyPrint.printOnConsole("Car is Already Moving");
       return;
     }
 
@@ -79,10 +46,10 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
     isGamePaused = false;
 
     final List<LatLng> points = calculatePolylinePointsForAllPolylinePoints().toList();
-    print("got ${points.length} points for car");
+    MyPrint.printOnConsole("got ${points.length} points for car");
 
     final List<MyMarkerModel> popups = getPopupsCoordinates();
-    print("got ${popups.length} popups for car");
+    MyPrint.printOnConsole("got ${popups.length} popups for car");
 
     if(popups.isNotEmpty) {
       currentPopupIndex = 0;
@@ -100,25 +67,25 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
   }
 
   Future<void> moveCar({required List<LatLng> allPoints, int positionIndex = -1, required List<MyMarkerModel> popups, int popupIndex = -1,}) async {
-    print("moveCar called with index $positionIndex");
+    MyPrint.printOnConsole("moveCar called with index $positionIndex");
 
     if(!isCarMoving) {
       isGamePaused = false;
-      print("returning from moveCar because Car is Not Moving");
+      MyPrint.printOnConsole("returning from moveCar because Car is Not Moving");
       return;
     }
 
     while(isGamePaused) {
-      print("Game Paused");
+      MyPrint.printOnConsole("Game Paused");
       await Future.delayed(const Duration(milliseconds: 500));
     }
 
     positionIndex++;
-    print("currentIndex:$positionIndex");
+    MyPrint.printOnConsole("currentIndex:$positionIndex");
     if(positionIndex < allPoints.length) {
       final LatLng point = allPoints[positionIndex];
       carPosition = point;
-      print("Moving Car at position:$carPosition");
+      MyPrint.printOnConsole("Moving Car at position:$carPosition");
       setState(() {});
 
       if((popupIndex >= 0 && popupIndex < popups.length) && point == popups[popupIndex].latLng) {
@@ -133,7 +100,7 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
       isCarMoving = false;
       isGamePaused = false;
       setState(() {});
-      print("returning from moveCar because Not more points found");
+      MyPrint.printOnConsole("returning from moveCar because Not more points found");
       return;
     }
 
@@ -365,7 +332,7 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
 
   Iterable<LatLng> calculatePolylinePointsForAllPolylinePoints() sync* {
     final List<LatLng> points = getPolylinePoints();
-    print("Main Points length:${points.length}");
+    MyPrint.printOnConsole("Main Points length:${points.length}");
 
     for(int i = 0; i < points.length; i++) {
       final LatLng firstPoint = points[i];
@@ -380,30 +347,30 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
           end: secondPoint,
           depth: 1,
         );
-        print("innerPointsLength:${innerPoints.length}");
+        MyPrint.printOnConsole("innerPointsLength:${innerPoints.length}");
         yield* innerPoints;
       }
     }
   }
 
   Iterable<LatLng> calculatePolylinePointsBetweenPoint({required LatLng start, required LatLng end, double depth = 1}) sync* {
-    print("calculatePolylinePointsBetweenPoint called for start:$start, end:$end");
+    MyPrint.printOnConsole("calculatePolylinePointsBetweenPoint called for start:$start, end:$end");
 
     final double slope = (end.longitude - start.longitude) / (end.latitude - start.latitude);
-    print("slope:$slope");
+    MyPrint.printOnConsole("slope:$slope");
 
     double x = start.latitude;
     final double multiplier = (end.latitude - start.latitude) >= 0 ? 1 : -1;
     const diff = 0.0001;
-    print("initial x:$x");
-    print("multiplier:$multiplier");
-    print("diff:$diff");
+    MyPrint.printOnConsole("initial x:$x");
+    MyPrint.printOnConsole("multiplier:$multiplier");
+    MyPrint.printOnConsole("diff:$diff");
 
     while(multiplier == 1 ? (x < end.latitude) : (x > end.latitude)) {
       final double y = (slope * x) + (start.longitude - (slope * start.latitude));
       yield LatLng(x, y);
-      print("new x:$x");
-      print("new y:$y");
+      MyPrint.printOnConsole("new x:$x");
+      MyPrint.printOnConsole("new y:$y");
 
       x += (multiplier * diff);
     }
@@ -447,9 +414,9 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
   }
 
   void onTap(TapPosition tapPosition, LatLng latLng) {
-    // print("tapPosition:${tapPosition.global.}");
-    print("lat:${latLng.latitude}");
-    print("lng:${latLng.longitude}");
+    // MyPrint.printOnConsole("tapPosition:${tapPosition.global.}");
+    MyPrint.printOnConsole("lat:${latLng.latitude}");
+    MyPrint.printOnConsole("lng:${latLng.longitude}");
   }
 
   void resetSystem() {
