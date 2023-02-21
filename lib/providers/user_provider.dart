@@ -15,4 +15,6 @@ class UserProvider extends ChangeNotifier {
     MyPrint.printOnConsole("Selected index:$index");
     notifyListeners();
   }
+
+  String backgroundImageUrl = "";
 }

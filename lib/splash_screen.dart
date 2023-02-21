@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:traffi_rule/controllers/authentication_controller.dart';
+import 'package:traffi_rule/controllers/data_controller.dart';
 import 'package:traffi_rule/providers/connection_provider.dart';
 import 'package:traffi_rule/providers/user_provider.dart';
 import 'package:traffi_rule/controllers/user_controller.dart';
@@ -26,6 +27,9 @@ class _SplashScreenState extends State<SplashScreen> {
     MyPrint.printOnConsole("Start Listener Called");
 
     DateTime startTime = DateTime.now();
+
+    String backgroundImageUrl = await DataController().getBackgroundImageUrl(userProvider: Provider.of<UserProvider>(context, listen: false));
+    MyPrint.printOnConsole("backgroundImageUrl:'$backgroundImageUrl'");
 
     await Future.delayed(const Duration(seconds: 2));
     bool isUserLogin = await AuthenticationController().isUserLogin(context: context, initializeUserid: true);
